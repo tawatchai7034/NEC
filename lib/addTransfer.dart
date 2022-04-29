@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
+
+import 'package:nec/model/transfer.dart';
+import 'package:nec/model/trasferList.dart';
+import 'package:nec/qrScan.dart';
 import 'package:nec/transferConfirm.dart';
 
+TransferList transfer = new TransferList();
+
 class AddTransfer extends StatefulWidget {
-  const AddTransfer({Key? key}) : super(key: key);
+  final String test;
+  const AddTransfer({
+    Key? key,
+    required this.test,
+  }) : super(key: key);
 
   @override
   State<AddTransfer> createState() => _AddTransferState();
@@ -11,6 +21,29 @@ class AddTransfer extends StatefulWidget {
 class _AddTransferState extends State<AddTransfer> {
   var localStart = TextEditingController();
   var localDes = TextEditingController();
+  var lot = TextEditingController();
+  var vender = TextEditingController();
+  var partNo = TextEditingController();
+  var desc = TextEditingController();
+  var qty = TextEditingController();
+  var sumQty = TextEditingController();
+  var count = TextEditingController();
+
+  List<TransferModal> transList = [];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    // transList = transfer.getTransferList();
+    // if(transList != null) {
+    lot.text = widget.test;
+    vender.text = widget.test;
+    partNo.text = widget.test;
+    // }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,8 +108,8 @@ class _AddTransferState extends State<AddTransfer> {
                     Expanded(
                       child: TextFormField(
                         // key: Key(totalCalculated()),
-                        controller: localStart,
-                        onChanged: (localStart) {},
+                        controller: lot,
+                        onChanged: (lot) {},
                         onTap: () {},
                         decoration: InputDecoration(),
                         keyboardType: TextInputType.number,
@@ -85,7 +118,11 @@ class _AddTransferState extends State<AddTransfer> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(8, 0, 0, 0),
                       child: IconButton(
-                          onPressed: () {}, icon: Icon(Icons.qr_code)),
+                          onPressed: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => QRScanner(fromMenu: 0)));
+                          },
+                          icon: Icon(Icons.qr_code)),
                     ),
                   ],
                 ),
@@ -103,8 +140,8 @@ class _AddTransferState extends State<AddTransfer> {
                     Expanded(
                       child: TextFormField(
                         // key: Key(totalCalculated()),
-                        controller: localStart,
-                        onChanged: (localStart) {},
+                        controller: vender,
+                        onChanged: (vender) {},
                         onTap: () {},
                         decoration: InputDecoration(),
                         keyboardType: TextInputType.number,
@@ -113,7 +150,11 @@ class _AddTransferState extends State<AddTransfer> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(8, 0, 0, 0),
                       child: IconButton(
-                          onPressed: () {}, icon: Icon(Icons.qr_code)),
+                          onPressed: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => QRScanner(fromMenu: 1)));
+                          },
+                          icon: Icon(Icons.qr_code)),
                     ),
                   ],
                 ),
@@ -133,8 +174,8 @@ class _AddTransferState extends State<AddTransfer> {
                     Expanded(
                       child: TextFormField(
                         // key: Key(totalCalculated()),
-                        controller: localStart,
-                        onChanged: (localStart) {},
+                        controller: partNo,
+                        onChanged: (partNo) {},
                         onTap: () {},
                         decoration: InputDecoration(),
                         keyboardType: TextInputType.number,
@@ -143,7 +184,11 @@ class _AddTransferState extends State<AddTransfer> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(8, 0, 0, 0),
                       child: IconButton(
-                          onPressed: () {}, icon: Icon(Icons.qr_code)),
+                          onPressed: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => QRScanner(fromMenu: 2)));
+                          },
+                          icon: Icon(Icons.qr_code)),
                     ),
                   ],
                 ),
@@ -161,11 +206,11 @@ class _AddTransferState extends State<AddTransfer> {
                     Expanded(
                       child: TextFormField(
                         // key: Key(totalCalculated()),
-                        controller: localStart,
-                        onChanged: (localStart) {},
+                        controller: desc,
+                        onChanged: (desc) {},
                         onTap: () {},
                         decoration: InputDecoration(),
-                        keyboardType: TextInputType.number,
+                        // keyboardType: TextInputType.number,
                       ),
                     ),
                   ],
@@ -184,11 +229,11 @@ class _AddTransferState extends State<AddTransfer> {
                       Expanded(
                         child: TextFormField(
                           // key: Key(totalCalculated()),
-                          controller: localStart,
-                          onChanged: (localStart) {},
+                          controller: qty,
+                          onChanged: (qty) {},
                           onTap: () {},
                           decoration: InputDecoration(),
-                          // keyboardType: TextInputType.number,
+                          keyboardType: TextInputType.number,
                         ),
                       ),
                       Padding(
@@ -198,11 +243,11 @@ class _AddTransferState extends State<AddTransfer> {
                       Expanded(
                         child: TextFormField(
                           // key: Key(totalCalculated()),
-                          controller: localDes,
-                          onChanged: (localDes) {},
+                          controller: sumQty,
+                          onChanged: (sumQty) {},
                           onTap: () {},
                           decoration: InputDecoration(),
-                          // keyboardType: TextInputType.number,
+                          keyboardType: TextInputType.number,
                         ),
                       ),
                     ],
@@ -217,21 +262,16 @@ class _AddTransferState extends State<AddTransfer> {
                       padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
                       child: Text("Count :"),
                     ),
-                    // Expanded(
-                    //   child: TextFormField(
-                    //     // key: Key(totalCalculated()),
-                    //     controller: localStart,
-                    //     onChanged: (localStart) {},
-                    //     onTap: () {},
-                    //     decoration: InputDecoration(),
-                    //     keyboardType: TextInputType.number,
-                    //   ),
-                    // ),
-                    // Padding(
-                    //   padding: const EdgeInsets.fromLTRB(8, 0, 0, 0),
-                    //   child: IconButton(
-                    //       onPressed: () {}, icon: Icon(Icons.qr_code)),
-                    // ),
+                    Expanded(
+                      child: TextFormField(
+                        // key: Key(totalCalculated()),
+                        controller: count,
+                        onChanged: (count) {},
+                        onTap: () {},
+                        decoration: InputDecoration(),
+                        keyboardType: TextInputType.number,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -246,8 +286,21 @@ class _AddTransferState extends State<AddTransfer> {
                     ElevatedButton(
                       child: Text('บันทึก'),
                       onPressed: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => TransferConfirm()));
+                        transfer.addTransfer(TransferModal(
+                            locF: localStart.text,
+                            locT: localDes.text,
+                            lot: lot.text,
+                            vender: vender.text,
+                            partNo: int.parse(partNo.text),
+                            desc: desc.text,
+                            qty: double.parse(qty.text),
+                            count: int.parse(count.text),
+                            amountQty: double.parse(sumQty.text)));
+
+                        transfer.ptrTransferList();
+
+                        // Navigator.of(context).push(MaterialPageRoute(
+                        //     builder: (context) => TransferConfirm()));
                       },
                       style: ElevatedButton.styleFrom(
                           primary: Colors.green,

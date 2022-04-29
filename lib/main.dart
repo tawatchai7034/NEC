@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
 
         primarySwatch: Colors.blue,
       ),
-      home: AddTransfer(),
+      home: AddTransfer(test:"999"),
     );
   }
 }
