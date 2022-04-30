@@ -52,12 +52,20 @@ class _TableComfirmState extends State<TableComfirm> {
         columnWidthMode: ColumnWidthMode.fill,
         columns: <GridColumn>[
           GridColumn(columnName: 'Part No\nDesc', label: Text('Part No\nDesc')),
-          GridColumn(columnName: 'LocF', label: Text('LocF')),
+          GridColumn(
+              columnName: 'LocF',
+              label: Text(
+                'LocF',
+              )),
           GridColumn(columnName: 'LocT', label: Text('LocT')),
-          GridColumn(columnName: 'Qty', label: Text('Qty')),
+          GridColumn(
+              columnName: 'Qty',
+              label: Text(
+                'Qty',
+                textAlign: TextAlign.center,
+              )),
         ]);
   }
-
 }
 
 class EmployeeDataSource extends DataGridSource {
@@ -76,8 +84,30 @@ class EmployeeDataSource extends DataGridSource {
   @override
   DataGridRowAdapter? buildRow(DataGridRow row) {
     return DataGridRowAdapter(
-        cells: row.getCells().map<Widget>((dataCell) {
-      return Text(dataCell.value.toString());
+        cells: row.getCells().map<Widget>((dataGridCell) {
+      TextAlign? setTextAlign() {
+        if (dataGridCell.columnName == 'Qty') {
+          return TextAlign.right;
+        } else if (dataGridCell.columnName == 'Part No\nDesc') {
+          return TextAlign.left;
+        } else if (dataGridCell.columnName == 'LocF') {
+          return TextAlign.left;
+        }else if (dataGridCell.columnName == 'LocT') {
+          return TextAlign.left;
+        }else {
+          return null;
+        }
+      }
+
+      return Container(
+          // alignment: Alignment.topRight,
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Text(
+            dataGridCell.value.toString(),
+            // style: getTextStyle(),
+            textAlign: setTextAlign(),
+            // overflow: TextOverflow.ellipsis,
+          ));
     }).toList());
   }
 }

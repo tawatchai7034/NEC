@@ -1,12 +1,15 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:nec/model/transfer.dart';
 import 'package:nec/model/trasferList.dart';
 import 'package:nec/transferConfirm.dart';
 
 TransferList transfer = new TransferList();
+var numFormat = NumberFormat('#,###.0#', 'en_US');
 
 class AddTransfer extends StatefulWidget {
   const AddTransfer({
@@ -25,12 +28,14 @@ class _AddTransferState extends State<AddTransfer> {
   var partNo = TextEditingController();
   var desc = TextEditingController();
   var qty = TextEditingController();
-  var sumQty = TextEditingController();
   var count = TextEditingController();
+  FocusNode nodePartNo = FocusNode();
+  FocusNode nodeQty = FocusNode();
 
   List<TransferModal> transList = [];
-  double totalQty = 0;
+  double totalQty = 0.0;
   int counter = 0;
+  int keyCounter = 0;
   FocusNode focusNode = FocusNode();
   TextEditingController controller = TextEditingController();
   List<String> virtualLocF = ["a", 'b', 'c', 'd', 'e'];
@@ -39,7 +44,6 @@ class _AddTransferState extends State<AddTransfer> {
   List<String> virtualVender = ["10", "20", "30", "40", "50"];
   List<String> virtualPartNo = ["10", "20", "30", "40", "50"];
   String locationDesc = '';
-  
 
   void _showNotFoundLocation() {
     showDialog(
@@ -97,58 +101,71 @@ class _AddTransferState extends State<AddTransfer> {
 
 // reference: https://api.flutter.dev/flutter/services/LogicalKeyboardKey-class.html
   void _handleKeyEvent(RawKeyEvent event) {
-    print(
-        "keyId: ${event.logicalKey.keyId} KeyName: ${event.logicalKey.debugName}");
-    int EscId = 4294967323;
-    int EnterId = 4294967309;
-    int BackspaceId = 4294967304;
-    int SpaceId = 32;
+    if (keyCounter % 2 == 0) {
+      int EscId = 4294967323;
+      int EnterId = 4294967309;
+      int BackspaceId = 4294967304;
+      int SpaceId = 32;
 
-    if (event.logicalKey.keyId == BackspaceId) {
-      setState(() {
-        counter++;
-        totalQty += double.parse(qty.text);
-        transfer.addTransfer(TransferModal(
-            locF: localStart.text,
-            locT: localDes.text,
-            lot: lot.text,
-            vender: vender.text,
-            partNo: int.parse(partNo.text),
-            desc: desc.text,
-            qty: double.parse(qty.text),
-            count: counter,
-            amountQty: totalQty));
-      });
-      Navigator.of(context)
-          .push(MaterialPageRoute(builder: (context) => TransferConfirm()));
-    } else if (event.logicalKey.keyId == 51) {
-      setState(() {
-        counter++;
-        totalQty += double.parse(qty.text);
-        transfer.addTransfer(TransferModal(
-            locF: localStart.text,
-            locT: localDes.text,
-            lot: lot.text,
-            vender: vender.text,
-            partNo: int.parse(partNo.text),
-            desc: desc.text,
-            qty: double.parse(qty.text),
-            count: counter,
-            amountQty: totalQty));
-        partNo.clear();
-        desc.clear();
-        qty.clear();
-        sumQty.clear();
-        count.clear();
-      });
+      // print(
+      //     "keyId: ${event.logicalKey.keyId} KeyName: ${event.logicalKey.debugName}");
+
+      keyCounter = 0;
+
+      if (event.logicalKey.keyId == BackspaceId) {
+        setState(() {
+          counter++;
+          totalQty += double.parse(qty.text);
+          transfer.addTransfer(TransferModal(
+              locF: localStart.text,
+              locT: localDes.text,
+              lot: lot.text,
+              vender: vender.text,
+              partNo: int.parse(partNo.text),
+              desc: desc.text,
+              qty: double.parse(qty.text),
+              count: counter,
+              amountQty: totalQty));
+          totalQty = transfer.getSumQty();
+        });
+
+        transfer.ptrTransferList();
+
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (context) => TransferConfirm()));
+      } else if (event.logicalKey.keyId == 51) {
+        setState(() {
+          counter++;
+          totalQty += double.parse(qty.text);
+          transfer.addTransfer(TransferModal(
+              locF: localStart.text,
+              locT: localDes.text,
+              lot: lot.text,
+              vender: vender.text,
+              partNo: int.parse(partNo.text),
+              desc: desc.text,
+              qty: double.parse(qty.text),
+              count: counter,
+              amountQty: totalQty));
+          partNo.clear();
+          desc.clear();
+          qty.clear();
+          // sumQty.clear();
+          count.clear();
+          totalQty = transfer.getSumQty();
+          locationDesc = '';
+        });
+        FocusScope.of(context).requestFocus(nodePartNo);
+      }
     }
+    keyCounter++;
   }
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    sumQty.text = totalQty.toString();
+    totalQty = 0.0;
   }
 
   @override
@@ -222,7 +239,7 @@ class _AddTransferState extends State<AddTransfer> {
                   Expanded(
                     child: TextField(
                       textInputAction: TextInputAction.next,
-                      keyboardType: TextInputType.number,
+                      // keyboardType: TextInputType.number,
                       controller: lot,
                       onSubmitted: (loc) {
                         if (virtualLot.contains(loc)) {
@@ -249,7 +266,7 @@ class _AddTransferState extends State<AddTransfer> {
                   Expanded(
                     child: TextField(
                       textInputAction: TextInputAction.next,
-                      keyboardType: TextInputType.number,
+                      // keyboardType: TextInputType.number,
                       controller: vender,
                       onSubmitted: (loc) {
                         if (virtualLot.contains(loc)) {
@@ -279,7 +296,8 @@ class _AddTransferState extends State<AddTransfer> {
                   Expanded(
                     child: TextField(
                       textInputAction: TextInputAction.next,
-                      keyboardType: TextInputType.number,
+                      focusNode: nodePartNo,
+                      // keyboardType: TextInputType.number,
                       controller: partNo,
                       onSubmitted: (loc) {
                         if (virtualPartNo.contains(loc)) {
@@ -298,6 +316,7 @@ class _AddTransferState extends State<AddTransfer> {
                             locationDesc =
                                 'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE';
                           }
+                          FocusScope.of(context).requestFocus(nodeQty);
                         } else {
                           _showIdNotFound();
                         }
@@ -317,10 +336,15 @@ class _AddTransferState extends State<AddTransfer> {
                     padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
                     child: Text("Desc :"),
                   ),
-                  Container(
-                      width:widthScreen * 0.75,
-                      child: FittedBox(
-                          fit: BoxFit.contain, child: Text(locationDesc)))
+                  (locationDesc == null || locationDesc == '')
+                      ? Container()
+                      : Container(
+                          width: widthScreen * 0.75,
+                          child: AutoSizeText(
+                            locationDesc,
+                            maxLines: 1,
+                          ),
+                        )
                   // Expanded(
                   //   child: TextField(
                   //     textInputAction: TextInputAction.next,
@@ -347,25 +371,21 @@ class _AddTransferState extends State<AddTransfer> {
                         focusNode: focusNode,
                         onKey: _handleKeyEvent,
                         child: TextField(
+                          focusNode: nodeQty,
                           textInputAction: TextInputAction.next,
                           keyboardType: TextInputType.number,
                           controller: qty,
-                          onSubmitted: (loc) {},
+                          onSubmitted: (loc) {
+                            setState(() {
+                              totalQty = transfer.getSumQty();
+                            });
+                          },
                         ),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 8, 8, 0),
-                      child: Text("Sum Qty :"),
-                    ),
-                    Expanded(
-                      child: TextField(
-                        textInputAction: TextInputAction.next,
-                        enabled: false,
-                        controller: sumQty,
-                        onSubmitted: (loc) {},
-                      ),
-                    ),
+                    totalQty == 0.0
+                        ? Text("Sum Qty :  ${totalQty.toStringAsFixed(1)}")
+                        : Text("Sum Qty :  ${numFormat.format(totalQty)}")
                   ],
                 )),
             Padding(
@@ -376,7 +396,7 @@ class _AddTransferState extends State<AddTransfer> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-                    child: Text("Count : ${counter + 1}"),
+                    child: Text("Count : ${counter}"),
                   ),
                 ],
               ),

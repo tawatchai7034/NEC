@@ -2,10 +2,11 @@ import 'package:nec/model/transfer.dart';
 
 class TransferList {
   List<TransferModal> trans = [];
-  String text = '';
+  double _sumQty = 0;
 
   addTransfer(TransferModal transfer) {
     this.trans.add(transfer);
+    _sumQty += transfer.amountQty;
   }
 
   ptrTransferList() {
@@ -26,11 +27,8 @@ class TransferList {
   List<TransferModal> getTransferList() {
     return this.trans;
   }
-  setText(String message){
-   this.text = message;
-  }
 
-  String getText(){
-    return this.text;
+  double getSumQty() {
+    return this._sumQty;
   }
 }
