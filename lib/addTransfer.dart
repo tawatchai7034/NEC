@@ -115,7 +115,7 @@ class _AddTransferState extends State<AddTransfer> {
       if (event.logicalKey.keyId == BackspaceId) {
         setState(() {
           counter++;
-          totalQty += double.parse(qty.text);
+          // totalQty += double.parse(qty.text);
           transfer.addTransfer(TransferModal(
               locF: localStart.text,
               locT: localDes.text,
@@ -136,7 +136,7 @@ class _AddTransferState extends State<AddTransfer> {
       } else if (event.logicalKey.keyId == 51) {
         setState(() {
           counter++;
-          totalQty += double.parse(qty.text);
+          // totalQty += double.parse(qty.text);
           transfer.addTransfer(TransferModal(
               locF: localStart.text,
               locT: localDes.text,
@@ -314,7 +314,7 @@ class _AddTransferState extends State<AddTransfer> {
                                 'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD';
                           } else if (loc == "50") {
                             locationDesc =
-                                'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE';
+                                'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE';
                           }
                           FocusScope.of(context).requestFocus(nodeQty);
                         } else {
@@ -330,11 +330,14 @@ class _AddTransferState extends State<AddTransfer> {
               padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
-                    child: Text("Desc :"),
+                    padding: const EdgeInsets.fromLTRB(0, 0, 8, 0),
+                    child: Text(
+                      "Desc :",
+                      // style: TextStyle(fontSize: 14),
+                    ),
                   ),
                   (locationDesc == null || locationDesc == '')
                       ? Container()
@@ -342,7 +345,10 @@ class _AddTransferState extends State<AddTransfer> {
                           width: widthScreen * 0.75,
                           child: AutoSizeText(
                             locationDesc,
-                            maxLines: 1,
+                            style: TextStyle(fontSize: 14),
+                            minFontSize: 12,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         )
                   // Expanded(
@@ -383,9 +389,16 @@ class _AddTransferState extends State<AddTransfer> {
                         ),
                       ),
                     ),
-                    totalQty == 0.0
-                        ? Text("Sum Qty :  ${totalQty.toStringAsFixed(1)}")
-                        : Text("Sum Qty :  ${numFormat.format(totalQty)}")
+                    Expanded(
+                        child: totalQty == 0.0
+                            ? Container(
+                                width: widthScreen * 0.3,
+                                child: Text(
+                                    "Sum Qty :  ${totalQty.toStringAsFixed(1)}"))
+                            : Container(
+                                width: widthScreen * 0.3,
+                                child: Text(
+                                    "Sum Qty :  ${numFormat.format(totalQty)}")))
                   ],
                 )),
             Padding(
@@ -401,43 +414,6 @@ class _AddTransferState extends State<AddTransfer> {
                 ],
               ),
             ),
-
-            // Padding(
-            //   padding: const EdgeInsets.fromLTRB(0, 24, 0, 8),
-            //   child: Row(
-            //     mainAxisAlignment: MainAxisAlignment.center,
-            //     crossAxisAlignment: CrossAxisAlignment.center,
-            //     children: [
-            //       Spacer(),
-            //       ElevatedButton(
-            //         child: Text('บันทึก'),
-            //         onPressed: () {
-            //           // transfer.addTransfer(TransferModal(
-            //           //     locF: localStart.text,
-            //           //     locT: localDes.text,
-            //           //     lot: lot.text,
-            //           //     vender: vender.text,
-            //           //     partNo: int.parse(partNo.text),
-            //           //     desc: desc.text,
-            //           //     qty: double.parse(qty.text),
-            //           //     count: int.parse(count.text),
-            //           //     amountQty: double.parse(sumQty.text)));
-
-            //           // transfer.ptrTransferList();
-
-            //           Navigator.of(context).push(MaterialPageRoute(
-            //               builder: (context) => TransferConfirm()));
-            //         },
-            //         style: ElevatedButton.styleFrom(
-            //             primary: Colors.green,
-            //             padding:
-            //                 EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            //             textStyle: TextStyle(
-            //                 fontSize: 30, fontWeight: FontWeight.bold)),
-            //       ),
-            //     ],
-            //   ),
-            // ),
           ],
         )),
       ),

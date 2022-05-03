@@ -6,7 +6,7 @@ class TransferList {
 
   addTransfer(TransferModal transfer) {
     this.trans.add(transfer);
-    _sumQty += transfer.amountQty;
+    _sumQty += transfer.qty;
   }
 
   ptrTransferList() {
