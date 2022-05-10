@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:nec/model/transfer.dart';
 import 'package:nec/model/trasferList.dart';
-import 'package:nec/transferConfirm.dart';
+import 'package:nec/Screens/transferConfirm.dart';
 
 TransferList transfer = new TransferList();
 var numFormat = NumberFormat('#,###.0#', 'en_US');

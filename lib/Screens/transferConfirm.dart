@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:nec/addTransfer.dart';
+import 'package:nec/Screens/addTransfer.dart';
 import 'package:nec/model/sheets.dart';
-import 'package:nec/tableConfirm.dart';
-import 'package:nec/virtualData.dart';
+import 'package:nec/Screens/tableConfirm.dart';
+import 'package:nec/Screens/virtualData.dart';
 import 'package:nec/widget/scrollable_widget.dart';
 
 class TransferConfirm extends StatefulWidget {

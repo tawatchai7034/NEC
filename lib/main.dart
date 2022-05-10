@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:nec/addTransfer.dart';
+import 'package:nec/Screens/addTransfer.dart';
+import 'package:nec/Screens/login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,7 +17,7 @@ class MyApp extends StatelessWidget {
 
         primarySwatch: Colors.blue,
       ),
-      home: AddTransfer(),
+      home: LoginScreen(),
     );
   }
 }
