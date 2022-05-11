@@ -85,7 +85,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Container(
                 margin: const EdgeInsets.all(8.0),
                 width: widthScreen * 0.6,
-                height: heightScreen * 0.06,
+                height: 48,
                 decoration:
                     BoxDecoration(border: Border.all(color: Colors.black)),
                 child: Padding(
@@ -119,7 +119,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Container(
                 margin: const EdgeInsets.all(8.0),
                 width: widthScreen * 0.6,
-                height: heightScreen * 0.06,
+                height: 48,
                 decoration:
                     BoxDecoration(border: Border.all(color: Colors.black)),
                 child: Padding(
@@ -159,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.center,
                 margin: const EdgeInsets.all(8.0),
                 width: widthScreen * 0.6,
-                height: heightScreen * 0.06,
+                height: 48,
                 decoration:
                     BoxDecoration(border: Border.all(color: Colors.red)),
                 child: Padding(
@@ -217,21 +217,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       MaterialPageRoute(builder: (context) => AddTransfer()));
                 }
 
-                // if ((virtualUser.singleWhere(
-                //         (user) => ((user.name == userName.text) &&
-                //             (user.password == password.text)),
-                //         orElse: () => UserModal(name: '404', password: 'not fount'))) !=
-                //     null) {
-                //   print("User name: ${userName.text}");
-                // } else {
-                //   _showIdNotFound();
-                // }
-
-                // if (virtualUser.contains(userName.text)) {
-                //   print("User name: ${userName.text}");
-                // } else {
-                //   _showIdNotFound();
-                // }
               },
               child: Container(
                   margin: const EdgeInsets.all(16.0),
