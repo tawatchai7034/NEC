@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nec/Screens/addTransfer.dart';
+import 'package:nec/Screens/changeLoc.dart';
 import 'package:nec/model/User.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,12 +16,12 @@ class _LoginScreenState extends State<LoginScreen> {
   var password = TextEditingController();
   bool rememberPass = false;
 
-  List<UserModal> virtualUser = [
-    UserModal(name: 'a', password: 'a'),
-    UserModal(name: 'b', password: 'b'),
-    UserModal(name: 'c', password: 'c'),
-    UserModal(name: 'd', password: 'd'),
-    UserModal(name: 'e', password: 'e'),
+  List<UserModel> virtualUser = [
+    UserModel(name: 'a', password: 'a',partNo: true),
+    UserModel(name: 'b', password: 'b',partNo: false),
+    UserModel(name: 'c', password: 'c',partNo: true),
+    UserModel(name: 'd', password: 'd',partNo: false),
+    UserModel(name: 'e', password: 'e',partNo: true),
   ];
 
   late String databaseName = "Database01";
@@ -202,11 +203,11 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             InkWell(
               onTap: () {
-                UserModal idCheck = virtualUser.singleWhere(
+                UserModel idCheck = virtualUser.singleWhere(
                     (user) => ((user.name == userName.text) &&
                         (user.password == password.text)),
-                    orElse: () => UserModal(
-                        name: '404 not found', password: '404 not found'));
+                    orElse: () => UserModel(
+                        name: '404 not found', password: '404 not found',partNo: false));
 
                 if (idCheck.name == '404 not found') {
                   _showIdNotFound();
@@ -214,7 +215,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   print(
                       "User Name: ${idCheck.name}\tPassword: ${idCheck.password}\tDatabase: ${databaseName}\tRemember Password: ${rememberPass}");
                   Navigator.of(context).push(
-                      MaterialPageRoute(builder: (context) => AddTransfer()));
+                      MaterialPageRoute(builder: (context) => ChangeLocation(user: idCheck)));
                 }
 
               },
