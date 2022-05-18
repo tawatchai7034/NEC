@@ -209,31 +209,19 @@ class _ChangeLocationState extends State<ChangeLocation> {
                 ),
               ],
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
+            Table(
+              columnWidths: {
+                0: FlexColumnWidth(2),
+                1: FlexColumnWidth(4),
+              },
               children: [
-                Column(children: [
+                TableRow(children: [
                   Container(
                       margin: const EdgeInsets.all(8.0),
-                      width: widthScreen * 0.17,
+                      width: widthScreen * 0.1,
                       height: 48,
                       child: Center(child: Text("Barcode :"))),
-                  Container(
-                      alignment: Alignment.centerLeft,
-                      margin: const EdgeInsets.all(8.0),
-                      width: widthScreen * 0.17,
-                      height: 48,
-                      child: Center(child: Text("Part No :"))),
-                  Container(
-                      margin: const EdgeInsets.all(8.0),
-                      alignment: Alignment.centerLeft,
-                      width: widthScreen * 0.17,
-                      height: 48,
-                      child: Center(child: Text("    Desc :"))),
-                ]),
-                // ----------------------------------------------------------------------------------------------------
-                Column(children: [
+                  // ***********************************************************************
                   Container(
                     margin: const EdgeInsets.all(8.0),
                     width: widthScreen * 0.65,
@@ -321,7 +309,14 @@ class _ChangeLocationState extends State<ChangeLocation> {
                       ),
                     ),
                   ),
-
+                ]),
+                TableRow(children: [
+                  Container(
+                      alignment: Alignment.centerLeft,
+                      margin: const EdgeInsets.all(8.0),
+                      width: widthScreen * 0.1,
+                      height: 48,
+                      child: Center(child: Text("Part No :"))),
                   // ***********************************************************************
                   Container(
                     margin: const EdgeInsets.all(8.0),
@@ -348,6 +343,14 @@ class _ChangeLocationState extends State<ChangeLocation> {
                       ),
                     ),
                   ),
+                ]),
+                TableRow(children: [
+                  Container(
+                      margin: const EdgeInsets.all(8.0),
+                      alignment: Alignment.centerLeft,
+                      width: widthScreen * 0.1,
+                      height: 48,
+                      child: Center(child: Text("    Desc :"))),
                   // ***********************************************************************
                   (locationDesc == null || locationDesc == '')
                       ? Container(
@@ -375,9 +378,10 @@ class _ChangeLocationState extends State<ChangeLocation> {
                             ),
                           ),
                         )
-                ])
+                ]),
               ],
             ),
+
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Table(
@@ -634,7 +638,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
                       width: widthScreen * 0.22,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Colors.red.shade200,
+                          color: Colors.red.shade200,
                           border: Border.all(color: Colors.black)),
                       child: Center(child: Text("Clear")),
                     ),
@@ -662,7 +666,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
                       width: widthScreen * 0.22,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: Colors.green.shade300,
+                          color: Colors.green.shade300,
                           border: Border.all(color: Colors.black)),
                       child: Center(child: Text("Confirm")),
                     ),
