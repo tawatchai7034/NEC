@@ -2,7 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nec/Screens/addTransfer.dart';
 import 'package:nec/Screens/changeLoc.dart';
+import 'package:nec/api/proxy/loginApiProxy.dart';
 import 'package:nec/model/User.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -13,8 +15,11 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   var userName = TextEditingController();
-  var password = TextEditingController();
+  var passWord = TextEditingController();
   bool rememberPass = false;
+  String username = "1";
+  String password = "12345";
+  String messageWarning = "Username or Password is incorrect";
 
   List<UserModel> virtualUser = [
     UserModel(name: 'a', password: 'a', partNo: true),
@@ -145,7 +150,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 obscuringCharacter: '●',
                 maxLength: 16,
                 style: TextStyle(fontSize: 20),
-                controller: password,
+                controller: passWord,
                 // onSubmitted: (userName) {
                 //   if (virtualLocF.contains(loc)) {
                 //     print("Location from: $loc");
@@ -225,22 +230,23 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         InkWell(
           onTap: () {
-            UserModel idCheck = virtualUser.singleWhere(
-                (user) => ((user.name == userName.text) &&
-                    (user.password == password.text)),
-                orElse: () => UserModel(
-                    name: '404 not found',
-                    password: '404 not found',
-                    partNo: false));
+            doLogin();
+            // UserModel idCheck = virtualUser.singleWhere(
+            //     (user) => ((user.name == userName.text) &&
+            //         (user.password == passWord.text)),
+            //     orElse: () => UserModel(
+            //         name: '404 not found',
+            //         password: '404 not found',
+            //         partNo: false));
 
-            if (idCheck.name == '404 not found') {
-              _showIdNotFound();
-            } else {
-              print(
-                  "User Name: ${idCheck.name}\tPassword: ${idCheck.password}\tDatabase: ${databaseName}\tRemember Password: ${rememberPass}");
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => ChangeLocation(user: idCheck)));
-            }
+            // if (idCheck.name == '404 not found') {
+            //   _showIdNotFound();
+            // } else {
+            //   print(
+            //       "User Name: ${idCheck.name}\tPassword: ${idCheck.password}\tDatabase: ${databaseName}\tRemember Password: ${rememberPass}");
+            //   Navigator.of(context).push(MaterialPageRoute(
+            //       builder: (context) => ChangeLocation(user: idCheck)));
+            // }
           },
           child: Container(
               margin: const EdgeInsets.all(16.0),
@@ -256,7 +262,7 @@ class _LoginScreenState extends State<LoginScreen> {
           onTap: () {
             setState(() {
               userName.clear();
-              password.clear();
+              passWord.clear();
               databaseName = "Database01";
               rememberPass = false;
             });
@@ -272,6 +278,73 @@ class _LoginScreenState extends State<LoginScreen> {
               )),
         ),
       ],
+    );
+  }
+
+  doLogin() async {
+    // print("doLogin()");
+    if (userName.text.isNotEmpty) {
+      username = userName.text;
+      password = passWord.text;
+      String dbConfig = databaseName;
+      SharedPreferences pref = await SharedPreferences.getInstance();
+      LoginApiProxy proxy = LoginApiProxy();
+      proxy.dbHost = pref.getString(dbConfig + '_DBHOST') ?? '172.28.19.51';
+      proxy.dbPort = pref.getInt(dbConfig + '_DBPORT') ?? 1521;
+      proxy.dbUser = username;
+      proxy.dbPass = password;
+
+      var result = await proxy.login(username, password);
+      print("doLogin()");
+      
+      if (result.errorMessage == null) {
+        Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => ChangeLocation(user: result)));
+
+        userName.clear();
+        passWord.clear();
+      } else {
+        messageWarning = result.errorMessage!;
+        warnningDialog();
+      }
+    } else {
+      warnningDialog();
+    }
+  }
+
+  warnningDialog() {
+    return showDialog<String>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        contentPadding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 20.0),
+        title: const Text('Information'),
+        content: Text(messageWarning),
+        actions: <Widget>[
+          const Divider(
+            indent: 10.0,
+            endIndent: 10.0,
+            thickness: 0.8,
+          ),
+          Container(
+            height: 50.0,
+            //color: Colors.amber,
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, 'OK');
+                    userName.clear();
+                    passWord.clear();
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

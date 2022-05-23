@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import 'package:nec/Screens/transferConfirm.dart';
+import 'package:nec/api/response/loginRes.dart';
 import 'package:nec/model/User.dart';
 import 'package:nec/model/transfer.dart';
 import 'package:nec/model/trasferList.dart';
@@ -13,7 +14,7 @@ import 'package:nec/model/trasferList.dart';
 TransferList transfer = new TransferList();
 
 class ChangeLocation extends StatefulWidget {
-  final UserModel user;
+  final LoginResponse user;
   const ChangeLocation({
     Key? key,
     required this.user,
@@ -137,7 +138,9 @@ class _ChangeLocationState extends State<ChangeLocation> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    defaultPartNo = widget.user.partNo;
+    widget.user.defaultOption == "PART_NO"
+        ? defaultPartNo = true
+        : defaultPartNo = false;
   }
 
   @override
@@ -184,7 +187,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
         InkWell(
           onTap: () {
             setState(() {
-              widget.user.partNo = !widget.user.partNo;
+              defaultPartNo = !defaultPartNo;
             });
           },
           child: Container(
@@ -192,7 +195,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
             height: 48,
             child: Row(
               children: [
-                widget.user.partNo == true
+                defaultPartNo == true
                     ? Icon(Icons.circle_sharp, color: Colors.green)
                     : Icon(Icons.circle_outlined),
                 SizedBox(width: 8),
@@ -204,7 +207,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
         InkWell(
           onTap: () {
             setState(() {
-              widget.user.partNo = !widget.user.partNo;
+              defaultPartNo = !defaultPartNo;
             });
           },
           child: Container(
@@ -212,7 +215,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
             height: 48,
             child: Row(
               children: [
-                widget.user.partNo == false
+                defaultPartNo == false
                     ? Icon(Icons.circle_sharp, color: Colors.green)
                     : Icon(Icons.circle_outlined),
                 SizedBox(width: 8),
@@ -640,7 +643,9 @@ class _ChangeLocationState extends State<ChangeLocation> {
                           locFron = 'Select';
                           Locitems.clear();
                           Locitems.add('Select');
-                          widget.user.partNo = defaultPartNo;
+                          widget.user.defaultOption == "PART_NO"
+                              ? defaultPartNo = true
+                              : defaultPartNo = false;
                         });
                       },
                       child: Container(
@@ -668,7 +673,9 @@ class _ChangeLocationState extends State<ChangeLocation> {
                           locFron = 'Select';
                           Locitems.clear();
                           Locitems.add('Select');
-                          widget.user.partNo = defaultPartNo;
+                          widget.user.defaultOption == "PART_NO"
+                              ? defaultPartNo = true
+                              : defaultPartNo = false;
                         });
                       },
                       child: Container(

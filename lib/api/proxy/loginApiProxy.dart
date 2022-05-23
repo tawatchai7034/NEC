@@ -6,19 +6,23 @@ import 'package:nec/api/response/loginRes.dart';
 
 
 class LoginApiProxy extends ApiProxy {
-  Future<String?> login(String userName, String password) async {
+  Future<LoginResponse> login(String userName, String password) async {
     LoginRequest req = LoginRequest(userName: userName, passWord: password);
-
+   
     print('Request to api/Common/Login');
     String? result;
     result =
         await processPostRequest('api/Common/Login', jsonEncode(req.toJson()));
+
+    LoginResponse resp = LoginResponse.fromJson(jsonDecode(result));
     print('API Response : ' + result);
-    if (result == "null") {
-      return '';
-    } else {
-      LoginResponse resp = LoginResponse.fromJson(jsonDecode(result));
-      return resp.errorMessage;
-    }
+    // if (result == "null") {
+    //   return result;
+    // } else {
+      
+    //   return resp;
+    // }
+
+    return resp;
   }
 }
