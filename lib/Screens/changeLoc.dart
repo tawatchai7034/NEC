@@ -1,11 +1,16 @@
+import 'dart:io';
+
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:intl/intl.dart';
 
 import 'package:nec/Screens/transferConfirm.dart';
+import 'package:nec/api/proxy/barcodeApiProxy.dart';
+import 'package:nec/api/response/barcodeRes.dart';
 import 'package:nec/api/response/loginRes.dart';
 import 'package:nec/model/User.dart';
 import 'package:nec/model/transfer.dart';
@@ -26,23 +31,25 @@ class ChangeLocation extends StatefulWidget {
 
 class _ChangeLocationState extends State<ChangeLocation> {
   var numFormat = NumberFormat('#,###', 'en_US');
-  var vender = TextEditingController();
+  var barcode = TextEditingController();
   var partNo = TextEditingController();
   var desc = TextEditingController();
   var localDes = TextEditingController();
   var qtyMove = TextEditingController();
 
-  int available = 0;
+  double qty_available = 0.0;
+  double qty_move = 0.0;
+  List<BarcodeDataRes> bacodeList = [];
 
   FocusNode focusNode = FocusNode();
   TextEditingController controller = TextEditingController();
-  List<String> virtualLocF = ["a", 'b', 'c', 'd', 'e'];
+
   List<String> virtualLocT = ["f", 'g', 'h', 'i', 'j'];
-  List<String> virtualLot = ["10", "20", "30", "40", "50"];
-  List<String> virtualVender = ["10", "20", "30", "40", "50"];
-  List<String> virtualPartNo = ["10", "20", "30", "40", "50"];
+
   String locationDesc = '';
   late bool defaultPartNo;
+  String messageWarning = "";
+  late String barCodeNumber;
 
   void _showNotFoundLocation() {
     showDialog(
@@ -188,6 +195,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
           onTap: () {
             setState(() {
               defaultPartNo = !defaultPartNo;
+              widget.user.defaultOption == "PART_NO";
             });
           },
           child: Container(
@@ -208,6 +216,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
           onTap: () {
             setState(() {
               defaultPartNo = !defaultPartNo;
+              widget.user.defaultOption == "LOT_NO";
             });
           },
           child: Container(
@@ -259,70 +268,9 @@ class _ChangeLocationState extends State<ChangeLocation> {
                 ),
                 textInputAction: TextInputAction.next,
                 // keyboardType: TextInputType.number,
-                controller: vender,
+                controller: barcode,
                 onSubmitted: (loc) {
-                  if (virtualLot.contains(loc)) {
-                    // print("Vender id: $loc");
-                    if (loc == '10') {
-                      partNo.text = '10';
-                      setState(() {
-                        locationDesc = 'AAAAAAAAAAAAAAA';
-                        locFron = 'Select';
-                        Locitems.clear();
-                        Locitems.add('Select');
-                        Locitems.add('Aot1');
-                        Locitems.add('Aot2');
-                        Locitems.add('Aot3');
-                        Locitems.add('Aot4');
-                      });
-                    } else if (loc == '20') {
-                      partNo.text = '20';
-                      setState(() {
-                        locationDesc = 'BBBBBBBBBBBBBBBBBBBBBB';
-                        locFron = 'Select';
-                        Locitems.clear();
-                        Locitems.add('Select');
-                        Locitems.add('Bot1');
-                        Locitems.add('Bot2');
-                      });
-                    } else if (loc == '30') {
-                      partNo.text = '30';
-                      setState(() {
-                        locationDesc = 'CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC';
-                        locFron = 'Select';
-                        Locitems.clear();
-                        Locitems.add('Select');
-                        Locitems.add('Cot1');
-                        Locitems.add('Cot2');
-                        Locitems.add('Cot3');
-                      });
-                    } else if (loc == '40') {
-                      partNo.text = '40';
-                      setState(() {
-                        locationDesc =
-                            'DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD';
-                        locFron = 'Select';
-                        Locitems.clear();
-                        Locitems.add('Select');
-                        Locitems.add('Dot1');
-                      });
-                    } else if (loc == '50') {
-                      partNo.text = '50';
-                      setState(() {
-                        locationDesc =
-                            'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE';
-                        locFron = 'Select';
-                        Locitems.clear();
-                        Locitems.add('Select');
-                        Locitems.add('Eot1');
-                        Locitems.add('Eot2');
-                        Locitems.add('Eot3');
-                        Locitems.add('Eot4');
-                      });
-                    }
-                  } else {
-                    _showIdNotFound();
-                  }
+                  doBarcode();
                 },
               ),
             ),
@@ -405,6 +353,12 @@ class _ChangeLocationState extends State<ChangeLocation> {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Table(
+        columnWidths: {
+          0: FlexColumnWidth(1.5),
+          1: FlexColumnWidth(1.1),
+          2: FlexColumnWidth(1.2),
+          3: FlexColumnWidth(1.2),
+        },
         children: [
           TableRow(children: [
             Container(
@@ -421,7 +375,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
             ),
             Container(
               // margin: const EdgeInsets.all(8.0),
-              width: widthScreen * 0.22,
+              width: widthScreen * 0.20,
               height: 36,
               decoration: BoxDecoration(
                   color: Colors.blue.shade200,
@@ -480,40 +434,24 @@ class _ChangeLocationState extends State<ChangeLocation> {
                     );
                   }).toList(),
                   onChanged: (String? newValue) {
+                    BarcodeDataRes barcodeData = bacodeList.singleWhere(
+                            (barcodeList) => (barcodeList.locationFrom == newValue),
+                            orElse: () => BarcodeDataRes(errorMessage: '404'));
+
+
+                    if(barcodeData.errorMessage != '404'){
+                      // print('++++++++++++++++++++++ ${barcodeData.qtyAvailable} ++++++++++++++++++++++');
+                      setState(() {
+                        qty_available = barcodeData.qtyAvailable!;
+                      });
+                    }else{
+                      setState(() {
+                        qty_available = 0.0;
+                      });
+                    }
+
                     setState(() {
                       locFron = newValue!;
-
-                      if (newValue == 'Aot1') {
-                        available = 125;
-                      } else if (newValue == 'Aot2') {
-                        available = 3;
-                      } else if (newValue == 'Aot3') {
-                        available = 545;
-                      } else if (newValue == 'Aot4') {
-                        available = 32456;
-                      } else if (newValue == 'Bot1') {
-                        available = 36;
-                      } else if (newValue == 'Bot2') {
-                        available = 6897;
-                      } else if (newValue == 'Cot1') {
-                        available = 65847;
-                      } else if (newValue == 'Cot2') {
-                        available = 2;
-                      } else if (newValue == 'Cot3') {
-                        available = 5;
-                      } else if (newValue == 'Dot1') {
-                        available = 554;
-                      } else if (newValue == 'Eot1') {
-                        available = 1;
-                      } else if (newValue == 'Eot2') {
-                        available = 698;
-                      } else if (newValue == 'Eot3') {
-                        available = 23;
-                      } else if (newValue == 'Eot4') {
-                        available = 84;
-                      } else {
-                        available = 0;
-                      }
                     });
                   },
                 ),
@@ -528,7 +466,10 @@ class _ChangeLocationState extends State<ChangeLocation> {
                   margin: const EdgeInsets.all(8.0),
                   width: widthScreen * 0.25,
                   height: 28,
-                  child: Center(child: Text(numFormat.format(available)))),
+                  child: Center(
+                      child: qty_available == 0
+                          ? Text('0.0')
+                          : Text(numFormat.format(qty_available)))),
             ),
             Container(
               width: widthScreen * 0.28,
@@ -589,12 +530,12 @@ class _ChangeLocationState extends State<ChangeLocation> {
                     // textInputAction: TextInputAction.next,
                     keyboardType: TextInputType.number,
                     controller: qtyMove,
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
+                    // inputFormatters: <TextInputFormatter>[
+                    //   FilteringTextInputFormatter.digitsOnly
+                    // ],
                     onSubmitted: (loc) {
                       int qty = int.parse(loc);
-                      if ((qty > 0) && qty <= available) {
+                      if ((qty > 0) && qty <= qty_available) {
                         print("Qty Move: $loc");
                       } else {
                         _showQtyErr();
@@ -633,13 +574,13 @@ class _ChangeLocationState extends State<ChangeLocation> {
                     InkWell(
                       onTap: () {
                         setState(() {
-                          vender.clear();
+                          barcode.clear();
                           partNo.clear();
                           desc.clear();
                           localDes.clear();
                           qtyMove.clear();
                           locationDesc = '';
-                          available = 0;
+                          qty_available = 0.0;
                           locFron = 'Select';
                           Locitems.clear();
                           Locitems.add('Select');
@@ -663,13 +604,13 @@ class _ChangeLocationState extends State<ChangeLocation> {
                       onTap: () {
                         // Save data and reset
                         setState(() {
-                          vender.clear();
+                          barcode.clear();
                           partNo.clear();
                           desc.clear();
                           localDes.clear();
                           locationDesc = '';
                           qtyMove.clear();
-                          available = 0;
+                          qty_available = 0.0;
                           locFron = 'Select';
                           Locitems.clear();
                           Locitems.add('Select');
@@ -695,6 +636,79 @@ class _ChangeLocationState extends State<ChangeLocation> {
           ),
         ),
       ]),
+    );
+  }
+
+  doBarcode() async {
+    // print("doLogin()");
+    if (barcode.text.isNotEmpty) {
+      try {
+        EasyLoading.show(status: 'loading...');
+        barCodeNumber = barcode.text;
+
+        BarcodeApiProxy barCodeProxy = BarcodeApiProxy();
+
+        List<BarcodeDataRes> bacodeRes = await barCodeProxy.getBarcodeData(
+            barCodeNumber, widget.user.defaultOption!);
+
+        locFron = 'Select';
+        Locitems.clear();
+        Locitems.add('Select');
+        for (int index = 0; index < bacodeRes.length; index++) {
+          partNo.text = bacodeRes[index].partNo!;
+          locationDesc = bacodeRes[index].partDesc!;
+          Locitems.add(bacodeRes[index].locationFrom!);
+          bacodeList.add(bacodeRes[index]);
+        }
+
+        EasyLoading.dismiss();
+      } on SocketException catch (e) {
+        EasyLoading.dismiss();
+        wrongDialog(e.message);
+      } on Exception catch (e) {
+        EasyLoading.dismiss();
+        wrongDialog(e.toString());
+      }
+    } else {
+      wrongDialog(messageWarning);
+    }
+  }
+
+  wrongDialog(String msg) {
+    return showDialog<String>(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        contentPadding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 20.0),
+        title: const Text('Information'),
+        content: Text(
+          msg,
+          style: const TextStyle(fontSize: 11.0),
+        ),
+        actions: <Widget>[
+          const Divider(
+            indent: 10.0,
+            endIndent: 10.0,
+            thickness: 0.8,
+          ),
+          Container(
+            height: 50.0,
+            //color: Colors.amber,
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, 'OK');
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

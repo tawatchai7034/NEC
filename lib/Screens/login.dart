@@ -1,10 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:nec/Screens/addTransfer.dart';
 import 'package:nec/Screens/changeLoc.dart';
 import 'package:nec/api/proxy/loginApiProxy.dart';
 import 'package:nec/model/User.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -17,17 +22,11 @@ class _LoginScreenState extends State<LoginScreen> {
   var userName = TextEditingController();
   var passWord = TextEditingController();
   bool rememberPass = false;
-  String username = "1";
-  String password = "12345";
+  String username = "";
+  String password = "";
   String messageWarning = "Username or Password is incorrect";
 
-  List<UserModel> virtualUser = [
-    UserModel(name: 'a', password: 'a', partNo: true),
-    UserModel(name: 'b', password: 'b', partNo: false),
-    UserModel(name: 'c', password: 'c', partNo: true),
-    UserModel(name: 'd', password: 'd', partNo: false),
-    UserModel(name: 'e', password: 'e', partNo: true),
-  ];
+  late Box rememberBox;
 
   late String databaseName = "Database01";
   List<DropdownMenuItem<String>> get dropdownItems {
@@ -66,6 +65,33 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           );
         });
+  }
+
+  void rememberInit() async {
+    rememberBox = await Hive.openBox("loanding...");
+    getRemember();
+  }
+
+  void getRemember() async {
+    if (rememberBox.get('userName') != null) {
+      userName.text = rememberBox.get('userName');
+      setState(() {
+        rememberPass = true;
+      });
+    }
+    if (rememberBox.get('passWord') != null) {
+      passWord.text = rememberBox.get('passWord');
+      setState(() {
+        rememberPass = true;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    rememberInit();
+    super.initState();
   }
 
   @override
@@ -205,22 +231,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Widget _RememberField() {
     return ListTile(
-        title: Text('Remember Password'),
-        leading: rememberPass == false
-            ? IconButton(
-                onPressed: () {
-                  setState(() {
-                    rememberPass = true;
-                  });
-                },
-                icon: Icon(Icons.check_box_outline_blank))
-            : IconButton(
-                onPressed: () {
-                  setState(() {
-                    rememberPass = false;
-                  });
-                },
-                icon: Icon(Icons.check_box_outlined, color: Colors.green)));
+      title: Text('Remember Password'),
+      leading: Checkbox(
+        checkColor: Colors.white,
+        activeColor: Colors.green,
+        value: rememberPass,
+        onChanged: (bool? value) {
+          setState(() {
+            rememberPass = value!;
+          });
+        },
+      ),
+    );
   }
 
   Widget _FooterField(double widthScreen) {
@@ -231,22 +253,7 @@ class _LoginScreenState extends State<LoginScreen> {
         InkWell(
           onTap: () {
             doLogin();
-            // UserModel idCheck = virtualUser.singleWhere(
-            //     (user) => ((user.name == userName.text) &&
-            //         (user.password == passWord.text)),
-            //     orElse: () => UserModel(
-            //         name: '404 not found',
-            //         password: '404 not found',
-            //         partNo: false));
-
-            // if (idCheck.name == '404 not found') {
-            //   _showIdNotFound();
-            // } else {
-            //   print(
-            //       "User Name: ${idCheck.name}\tPassword: ${idCheck.password}\tDatabase: ${databaseName}\tRemember Password: ${rememberPass}");
-            //   Navigator.of(context).push(MaterialPageRoute(
-            //       builder: (context) => ChangeLocation(user: idCheck)));
-            // }
+            remember();
           },
           child: Container(
               margin: const EdgeInsets.all(16.0),
@@ -284,41 +291,59 @@ class _LoginScreenState extends State<LoginScreen> {
   doLogin() async {
     // print("doLogin()");
     if (userName.text.isNotEmpty) {
-      username = userName.text;
-      password = passWord.text;
-      String dbConfig = databaseName;
-      SharedPreferences pref = await SharedPreferences.getInstance();
-      LoginApiProxy proxy = LoginApiProxy();
-      proxy.dbHost = pref.getString(dbConfig + '_DBHOST') ?? '172.28.19.51';
-      proxy.dbPort = pref.getInt(dbConfig + '_DBPORT') ?? 1521;
-      proxy.dbUser = username;
-      proxy.dbPass = password;
+      try {
+        EasyLoading.show(status: 'loading...');
+        username = userName.text;
+        password = passWord.text;
+        String dbConfig = databaseName;
+        SharedPreferences pref = await SharedPreferences.getInstance();
+        LoginApiProxy proxy = LoginApiProxy();
+        proxy.dbHost = pref.getString(dbConfig + '_DBHOST') ?? '172.28.19.51';
+        proxy.dbPort = pref.getInt(dbConfig + '_DBPORT') ?? 1521;
+        proxy.dbUser = username;
+        proxy.dbPass = password;
 
-      var result = await proxy.login(username, password);
-      print("doLogin()");
-      
-      if (result.errorMessage == null) {
-        Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => ChangeLocation(user: result)));
-
-        userName.clear();
-        passWord.clear();
-      } else {
-        messageWarning = result.errorMessage!;
-        warnningDialog();
+        var result = await proxy.login(username, password);
+        if (result.errorMessage == null) {
+          if (rememberPass == true) {
+            setState(() {
+              username = userName.text;
+              password = passWord.text;
+            });
+          } else {
+            userName.clear();
+            passWord.clear();
+          }
+          Navigator.of(context).push(MaterialPageRoute(
+              builder: (context) => ChangeLocation(user: result)));
+        } else {
+          messageWarning = result.errorMessage!;
+          wrongDialog(messageWarning);
+        }
+        EasyLoading.dismiss();
+      } on SocketException catch (e) {
+        EasyLoading.dismiss();
+        wrongDialog(e.message);
+      } on Exception catch (e) {
+        EasyLoading.dismiss();
+        wrongDialog(e.toString());
       }
     } else {
-      warnningDialog();
+      wrongDialog(messageWarning);
     }
   }
 
-  warnningDialog() {
+  wrongDialog(String msg) {
     return showDialog<String>(
+      barrierDismissible: false,
       context: context,
       builder: (BuildContext context) => AlertDialog(
         contentPadding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 20.0),
         title: const Text('Information'),
-        content: Text(messageWarning),
+        content: Text(
+          msg,
+          style: const TextStyle(fontSize: 11.0),
+        ),
         actions: <Widget>[
           const Divider(
             indent: 10.0,
@@ -335,8 +360,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 TextButton(
                   onPressed: () {
                     Navigator.pop(context, 'OK');
-                    userName.clear();
-                    passWord.clear();
                   },
                   child: const Text('OK'),
                 ),
@@ -346,5 +369,12 @@ class _LoginScreenState extends State<LoginScreen> {
         ],
       ),
     );
+  }
+
+  remember() {
+    if (rememberPass == true) {
+      rememberBox.put('userName', userName.text);
+      rememberBox.put('passWord', passWord.text);
+    }
   }
 }

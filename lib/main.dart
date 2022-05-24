@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:nec/Screens/addTransfer.dart';
 import 'package:nec/Screens/login.dart';
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-void main() {
+void main() async{
+ await Hive.initFlutter();
   runApp(const MyApp());
 }
 
@@ -18,6 +22,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: LoginScreen(),
+      builder: EasyLoading.init(),
     );
   }
 }
