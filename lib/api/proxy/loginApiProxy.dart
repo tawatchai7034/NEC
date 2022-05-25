@@ -16,12 +16,7 @@ class LoginApiProxy extends ApiProxy {
 
     LoginResponse resp = LoginResponse.fromJson(jsonDecode(result));
     print('API Response : ' + result);
-    // if (result == "null") {
-    //   return result;
-    // } else {
-      
-    //   return resp;
-    // }
+
 
     return resp;
   }

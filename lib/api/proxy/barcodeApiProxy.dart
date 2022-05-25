@@ -24,12 +24,6 @@ class BarcodeApiProxy extends ApiProxy {
       }
 
       print('API Response : ' + result);
-      // if (result == "null") {
-      //   return result;
-      // } else {
-
-      //   return resp;
-      // }
 
       return returnValue;
     } else {

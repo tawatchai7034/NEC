@@ -10,7 +10,9 @@ import 'package:intl/intl.dart';
 
 import 'package:nec/Screens/transferConfirm.dart';
 import 'package:nec/api/proxy/barcodeApiProxy.dart';
+import 'package:nec/api/proxy/locationToApiProxy.dart';
 import 'package:nec/api/response/barcodeRes.dart';
+import 'package:nec/api/response/lacationToRes.dart';
 import 'package:nec/api/response/loginRes.dart';
 import 'package:nec/model/User.dart';
 import 'package:nec/model/transfer.dart';
@@ -30,11 +32,11 @@ class ChangeLocation extends StatefulWidget {
 }
 
 class _ChangeLocationState extends State<ChangeLocation> {
-  var numFormat = NumberFormat('#,###', 'en_US');
+  var numFormat = NumberFormat('#,###.0#', 'en_US');
   var barcode = TextEditingController();
   var partNo = TextEditingController();
   var desc = TextEditingController();
-  var localDes = TextEditingController();
+  var locTo = TextEditingController();
   var qtyMove = TextEditingController();
 
   double qty_available = 0.0;
@@ -50,6 +52,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
   late bool defaultPartNo;
   String messageWarning = "";
   late String barCodeNumber;
+  late String locationTo;
 
   void _showNotFoundLocation() {
     showDialog(
@@ -435,16 +438,15 @@ class _ChangeLocationState extends State<ChangeLocation> {
                   }).toList(),
                   onChanged: (String? newValue) {
                     BarcodeDataRes barcodeData = bacodeList.singleWhere(
-                            (barcodeList) => (barcodeList.locationFrom == newValue),
-                            orElse: () => BarcodeDataRes(errorMessage: '404'));
+                        (barcodeList) => (barcodeList.locationFrom == newValue),
+                        orElse: () => BarcodeDataRes(errorMessage: '404'));
 
-
-                    if(barcodeData.errorMessage != '404'){
+                    if (barcodeData.errorMessage != '404') {
                       // print('++++++++++++++++++++++ ${barcodeData.qtyAvailable} ++++++++++++++++++++++');
                       setState(() {
                         qty_available = barcodeData.qtyAvailable!;
                       });
-                    }else{
+                    } else {
                       setState(() {
                         qty_available = 0.0;
                       });
@@ -494,13 +496,9 @@ class _ChangeLocationState extends State<ChangeLocation> {
                     ),
                     textInputAction: TextInputAction.next,
                     // keyboardType: TextInputType.number,
-                    controller: localDes,
+                    controller: locTo,
                     onSubmitted: (loc) {
-                      if (virtualLocT.contains(loc)) {
-                        print("Vender id: $loc");
-                      } else {
-                        _showIdNotFound();
-                      }
+                      doLocationTo();
                     },
                   ),
                 ),
@@ -577,7 +575,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
                           barcode.clear();
                           partNo.clear();
                           desc.clear();
-                          localDes.clear();
+                          locTo.clear();
                           qtyMove.clear();
                           locationDesc = '';
                           qty_available = 0.0;
@@ -607,7 +605,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
                           barcode.clear();
                           partNo.clear();
                           desc.clear();
-                          localDes.clear();
+                          locTo.clear();
                           locationDesc = '';
                           qtyMove.clear();
                           qty_available = 0.0;
@@ -659,6 +657,37 @@ class _ChangeLocationState extends State<ChangeLocation> {
           locationDesc = bacodeRes[index].partDesc!;
           Locitems.add(bacodeRes[index].locationFrom!);
           bacodeList.add(bacodeRes[index]);
+        }
+
+        EasyLoading.dismiss();
+      } on SocketException catch (e) {
+        EasyLoading.dismiss();
+        wrongDialog(e.message);
+      } on Exception catch (e) {
+        EasyLoading.dismiss();
+        wrongDialog(e.toString());
+      }
+    } else {
+      wrongDialog(messageWarning);
+    }
+  }
+
+  doLocationTo() async {
+    // print("doLogin()");
+    if (locTo.text.isNotEmpty) {
+      try {
+        EasyLoading.show(status: 'loading...');
+        locationTo = locTo.text;
+
+        LocationToAplProxy locToProxy = LocationToAplProxy();
+
+        lacationToResp locationToRes =
+            await locToProxy.getLocationTo(locationTo);
+        if (locationToRes.errorMessage == null) {
+          return null;
+        } else {
+          messageWarning = locationToRes.errorMessage!;
+          wrongDialog(messageWarning);
         }
 
         EasyLoading.dismiss();
