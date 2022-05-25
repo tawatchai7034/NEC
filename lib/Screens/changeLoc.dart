@@ -10,9 +10,11 @@ import 'package:intl/intl.dart';
 
 import 'package:nec/Screens/transferConfirm.dart';
 import 'package:nec/api/proxy/barcodeApiProxy.dart';
+import 'package:nec/api/proxy/changeLocApiProxy.dart';
 import 'package:nec/api/proxy/locationToApiProxy.dart';
 import 'package:nec/api/proxy/qtyMoveApiProxy.dart';
 import 'package:nec/api/response/barcodeRes.dart';
+import 'package:nec/api/response/changeLocResp.dart';
 import 'package:nec/api/response/lacationToRes.dart';
 import 'package:nec/api/response/loginRes.dart';
 import 'package:nec/api/response/qtyMoveResp.dart';
@@ -23,10 +25,10 @@ import 'package:nec/model/trasferList.dart';
 TransferList transfer = new TransferList();
 
 class ChangeLocation extends StatefulWidget {
-  final LoginResponse user;
+  final LoginResponse changeLocation;
   const ChangeLocation({
     Key? key,
-    required this.user,
+    required this.changeLocation,
   }) : super(key: key);
 
   @override
@@ -148,7 +150,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    widget.user.defaultOption == "PART_NO"
+    widget.changeLocation.defaultOption == "PART_NO"
         ? defaultPartNo = true
         : defaultPartNo = false;
   }
@@ -198,7 +200,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
           onTap: () {
             setState(() {
               defaultPartNo = !defaultPartNo;
-              widget.user.defaultOption == "PART_NO";
+              widget.changeLocation.defaultOption = "PART_NO";
             });
           },
           child: Container(
@@ -219,7 +221,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
           onTap: () {
             setState(() {
               defaultPartNo = !defaultPartNo;
-              widget.user.defaultOption == "LOT_NO";
+              widget.changeLocation.defaultOption = "LOT_NO";
             });
           },
           child: Container(
@@ -444,14 +446,15 @@ class _ChangeLocationState extends State<ChangeLocation> {
                     if (barcodeData.errorMessage != '404') {
                       // print('++++++++++++++++++++++ ${barcodeData.qtyAvailable} ++++++++++++++++++++++');
                       setState(() {
+                        // locFron = newValue!;
                         qty_available = barcodeData.qtyAvailable!;
                       });
                     } else {
                       setState(() {
+                        // locFron = newValue!;
                         qty_available = 0.0;
                       });
                     }
-
                     setState(() {
                       locFron = newValue!;
                     });
@@ -566,21 +569,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
                   children: [
                     InkWell(
                       onTap: () {
-                        setState(() {
-                          barcode.clear();
-                          partNo.clear();
-                          desc.clear();
-                          locTo.clear();
-                          qtyMove.clear();
-                          locationDesc = '';
-                          qty_available = 0.0;
-                          locFron = 'Select';
-                          Locitems.clear();
-                          Locitems.add('Select');
-                          widget.user.defaultOption == "PART_NO"
-                              ? defaultPartNo = true
-                              : defaultPartNo = false;
-                        });
+                        resetAll();
                       },
                       child: Container(
                         // margin: const EdgeInsets.all(8.0),
@@ -596,21 +585,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
                     InkWell(
                       onTap: () {
                         // Save data and reset
-                        setState(() {
-                          barcode.clear();
-                          partNo.clear();
-                          desc.clear();
-                          locTo.clear();
-                          locationDesc = '';
-                          qtyMove.clear();
-                          qty_available = 0.0;
-                          locFron = 'Select';
-                          Locitems.clear();
-                          Locitems.add('Select');
-                          widget.user.defaultOption == "PART_NO"
-                              ? defaultPartNo = true
-                              : defaultPartNo = false;
-                        });
+                        doChangeLocation();
                       },
                       child: Container(
                         // margin: const EdgeInsets.all(8.0),
@@ -642,16 +617,21 @@ class _ChangeLocationState extends State<ChangeLocation> {
         BarcodeApiProxy barCodeProxy = BarcodeApiProxy();
 
         List<BarcodeDataRes> bacodeRes = await barCodeProxy.getBarcodeData(
-            barCodeNumber, widget.user.defaultOption!);
-
-        locFron = 'Select';
-        Locitems.clear();
-        Locitems.add('Select');
-        for (int index = 0; index < bacodeRes.length; index++) {
-          partNo.text = bacodeRes[index].partNo!;
-          locationDesc = bacodeRes[index].partDesc!;
-          Locitems.add(bacodeRes[index].locationFrom!);
-          bacodeList.add(bacodeRes[index]);
+            barCodeNumber, widget.changeLocation.defaultOption!);
+        if (defaultPartNo == true) {
+          locFron = 'Select';
+          Locitems.clear();
+          Locitems.add('Select');
+          for (int index = 0; index < bacodeRes.length; index++) {
+            partNo.text = bacodeRes[index].partNo!;
+            locationDesc = bacodeRes[index].partDesc!;
+            Locitems.add(bacodeRes[index].locationFrom!);
+            bacodeList.add(bacodeRes[index]);
+          }
+          EasyLoading.dismiss();
+        } else {
+          EasyLoading.dismiss();
+          return null;
         }
 
         EasyLoading.dismiss();
@@ -678,11 +658,11 @@ class _ChangeLocationState extends State<ChangeLocation> {
 
         lacationToResp? locationToRes =
             await locToProxy.getLocationTo(locationTo);
-        if (locationToRes!.errorMessage == null) {
+        if (locationToRes == null) {
           EasyLoading.dismiss();
           return null;
         } else {
-          messageWarning = locationToRes.errorMessage!;
+          messageWarning = locationToRes.errorMessage;
           wrongDialog(messageWarning!);
           EasyLoading.dismiss();
         }
@@ -711,11 +691,66 @@ class _ChangeLocationState extends State<ChangeLocation> {
 
         qtyMoveResp? qtyMoveRes =
             await qtyMoveProxy.getQtyMove(qty_available, qty_move);
-        if (qtyMoveRes?.errorMessage == null) {
+        if (qtyMoveRes == null) {
           EasyLoading.dismiss();
           return null;
         } else {
-          messageWarning = qtyMoveRes?.errorMessage!;
+          messageWarning = qtyMoveRes.errorMessage!;
+          wrongDialog(messageWarning!);
+          EasyLoading.dismiss();
+        }
+
+        EasyLoading.dismiss();
+      } on SocketException catch (e) {
+        EasyLoading.dismiss();
+        wrongDialog(e.message);
+      } on Exception catch (e) {
+        EasyLoading.dismiss();
+        wrongDialog(e.toString());
+      }
+    } else {
+      wrongDialog(messageWarning!);
+    }
+  }
+
+  doChangeLocation() async {
+    // print("doLogin()");
+    if (barcode.text.isNotEmpty &&
+        locTo.text.isNotEmpty &&
+        locFron != 'Select' &&
+        qtyMove.text.isNotEmpty) {
+      try {
+        EasyLoading.show(status: 'loading...');
+        String? partNumber;
+        String? lotNumber;
+        locationTo = locTo.text;
+
+        if (defaultPartNo = true) {
+          partNumber = partNo.text;
+          lotNumber = null;
+        } else {
+          partNumber = null;
+          lotNumber = partNo.text;
+        }
+
+        ChangeLocationApiProxy changeLocProxy = ChangeLocationApiProxy();
+
+        ChangeLocationResp? changeLocRes = await changeLocProxy.changeLocation(
+          widget.changeLocation.defaultOption!,
+          partNumber!,
+          lotNumber,
+          locFron,
+          locationTo,
+          qty_move,
+        );
+
+        if (changeLocRes == null) {
+          EasyLoading.dismiss();
+          resetAll();
+
+          return null;
+        } else {
+          messageWarning = changeLocRes.errorMessage;
           wrongDialog(messageWarning!);
           EasyLoading.dismiss();
         }
@@ -769,5 +804,24 @@ class _ChangeLocationState extends State<ChangeLocation> {
         ],
       ),
     );
+  }
+
+  void resetAll() {
+    setState(() {
+      barcode.clear();
+      partNo.clear();
+      desc.clear();
+      locTo.clear();
+      locationDesc = '';
+      qtyMove.clear();
+      qty_available = 0.0;
+      locFron = 'Select';
+      Locitems.clear();
+      Locitems.add('Select');
+      bacodeList.clear();
+      widget.changeLocation.defaultOption == "PART_NO"
+          ? defaultPartNo = true
+          : defaultPartNo = false;
+    });
   }
 }

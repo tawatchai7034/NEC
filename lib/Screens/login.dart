@@ -315,7 +315,7 @@ class _LoginScreenState extends State<LoginScreen> {
             passWord.clear();
           }
           Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => ChangeLocation(user: result)));
+              builder: (context) => ChangeLocation(changeLocation: result)));
         } else {
           messageWarning = result.errorMessage!;
           wrongDialog(messageWarning);
