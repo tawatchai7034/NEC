@@ -36,12 +36,14 @@ class ChangeLocation extends StatefulWidget {
 }
 
 class _ChangeLocationState extends State<ChangeLocation> {
-  var numFormat = NumberFormat('#,###.0#', 'en_US');
+  var numFormat = NumberFormat('#,###', 'en_US');
   var barcode = TextEditingController();
   var partNo = TextEditingController();
   var desc = TextEditingController();
   var locTo = TextEditingController();
   var qtyMove = TextEditingController();
+
+  FocusNode nodeBarcode = FocusNode();
 
   double qty_available = 0.0;
   double qty_move = 0.0;
@@ -264,6 +266,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
               child: TextField(
+                focusNode: nodeBarcode,
                 decoration: new InputDecoration(
                   border: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -473,7 +476,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
                   height: 28,
                   child: Center(
                       child: qty_available == 0
-                          ? Text('0.0')
+                          ? Text('0')
                           : Text(numFormat.format(qty_available)))),
             ),
             Container(
@@ -586,6 +589,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
                       onTap: () {
                         // Save data and reset
                         doChangeLocation();
+                        FocusScope.of(context).requestFocus(nodeBarcode);
                       },
                       child: Container(
                         // margin: const EdgeInsets.all(8.0),
@@ -618,6 +622,11 @@ class _ChangeLocationState extends State<ChangeLocation> {
 
         List<BarcodeDataRes> bacodeRes = await barCodeProxy.getBarcodeData(
             barCodeNumber, widget.changeLocation.defaultOption!);
+
+        bacodeRes.sort((a, b) {
+          return a.locationFrom!.compareTo(b.locationFrom!);
+        });
+
         if (defaultPartNo == true) {
           locFron = 'Select';
           Locitems.clear();
@@ -628,6 +637,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
             Locitems.add(bacodeRes[index].locationFrom!);
             bacodeList.add(bacodeRes[index]);
           }
+          // Locitems.sort((a, b) => a.compareTo(b));
           EasyLoading.dismiss();
         } else {
           EasyLoading.dismiss();
@@ -729,15 +739,15 @@ class _ChangeLocationState extends State<ChangeLocation> {
           partNumber = partNo.text;
           lotNumber = null;
         } else {
-          partNumber = null;
-          lotNumber = partNo.text;
+          partNumber = partNo.text;
+          lotNumber = barcode.text;
         }
 
         ChangeLocationApiProxy changeLocProxy = ChangeLocationApiProxy();
 
         ChangeLocationResp? changeLocRes = await changeLocProxy.changeLocation(
           widget.changeLocation.defaultOption!,
-          partNumber!,
+          partNumber,
           lotNumber,
           locFron,
           locationTo,

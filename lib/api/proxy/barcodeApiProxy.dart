@@ -16,6 +16,7 @@ class BarcodeApiProxy extends ApiProxy {
 
     if (result != "null") {
       List<BarcodeDataRes> returnValue = [];
+
       List<dynamic> json = jsonDecode(result);
       if (json.isNotEmpty) {
         for (var item in json) {
