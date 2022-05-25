@@ -11,9 +11,11 @@ import 'package:intl/intl.dart';
 import 'package:nec/Screens/transferConfirm.dart';
 import 'package:nec/api/proxy/barcodeApiProxy.dart';
 import 'package:nec/api/proxy/locationToApiProxy.dart';
+import 'package:nec/api/proxy/qtyMoveApiProxy.dart';
 import 'package:nec/api/response/barcodeRes.dart';
 import 'package:nec/api/response/lacationToRes.dart';
 import 'package:nec/api/response/loginRes.dart';
+import 'package:nec/api/response/qtyMoveResp.dart';
 import 'package:nec/model/User.dart';
 import 'package:nec/model/transfer.dart';
 import 'package:nec/model/trasferList.dart';
@@ -46,11 +48,9 @@ class _ChangeLocationState extends State<ChangeLocation> {
   FocusNode focusNode = FocusNode();
   TextEditingController controller = TextEditingController();
 
-  List<String> virtualLocT = ["f", 'g', 'h', 'i', 'j'];
-
   String locationDesc = '';
   late bool defaultPartNo;
-  String messageWarning = "";
+  String? messageWarning = "";
   late String barCodeNumber;
   late String locationTo;
 
@@ -528,16 +528,11 @@ class _ChangeLocationState extends State<ChangeLocation> {
                     // textInputAction: TextInputAction.next,
                     keyboardType: TextInputType.number,
                     controller: qtyMove,
-                    // inputFormatters: <TextInputFormatter>[
-                    //   FilteringTextInputFormatter.digitsOnly
-                    // ],
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.digitsOnly
+                    ],
                     onSubmitted: (loc) {
-                      int qty = int.parse(loc);
-                      if ((qty > 0) && qty <= qty_available) {
-                        print("Qty Move: $loc");
-                      } else {
-                        _showQtyErr();
-                      }
+                      doQtyMove();
                     },
                   ),
                 ),
@@ -668,7 +663,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
         wrongDialog(e.toString());
       }
     } else {
-      wrongDialog(messageWarning);
+      wrongDialog(messageWarning!);
     }
   }
 
@@ -681,13 +676,15 @@ class _ChangeLocationState extends State<ChangeLocation> {
 
         LocationToAplProxy locToProxy = LocationToAplProxy();
 
-        lacationToResp locationToRes =
+        lacationToResp? locationToRes =
             await locToProxy.getLocationTo(locationTo);
-        if (locationToRes.errorMessage == null) {
+        if (locationToRes!.errorMessage == null) {
+          EasyLoading.dismiss();
           return null;
         } else {
           messageWarning = locationToRes.errorMessage!;
-          wrongDialog(messageWarning);
+          wrongDialog(messageWarning!);
+          EasyLoading.dismiss();
         }
 
         EasyLoading.dismiss();
@@ -699,7 +696,40 @@ class _ChangeLocationState extends State<ChangeLocation> {
         wrongDialog(e.toString());
       }
     } else {
-      wrongDialog(messageWarning);
+      wrongDialog(messageWarning!);
+    }
+  }
+
+  doQtyMove() async {
+    // print("doLogin()");
+    if (qtyMove.text.isNotEmpty) {
+      try {
+        EasyLoading.show(status: 'loading...');
+        qty_move = double.parse(qtyMove.text);
+
+        qtyMoveApiProxy qtyMoveProxy = qtyMoveApiProxy();
+
+        qtyMoveResp? qtyMoveRes =
+            await qtyMoveProxy.getQtyMove(qty_available, qty_move);
+        if (qtyMoveRes?.errorMessage == null) {
+          EasyLoading.dismiss();
+          return null;
+        } else {
+          messageWarning = qtyMoveRes?.errorMessage!;
+          wrongDialog(messageWarning!);
+          EasyLoading.dismiss();
+        }
+
+        EasyLoading.dismiss();
+      } on SocketException catch (e) {
+        EasyLoading.dismiss();
+        wrongDialog(e.message);
+      } on Exception catch (e) {
+        EasyLoading.dismiss();
+        wrongDialog(e.toString());
+      }
+    } else {
+      wrongDialog(messageWarning!);
     }
   }
 
