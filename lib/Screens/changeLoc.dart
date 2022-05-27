@@ -627,7 +627,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
           return a.locationFrom!.compareTo(b.locationFrom!);
         });
 
-        if (defaultPartNo == true) {
+        if (bacodeRes != null) {
           locFron = 'Select';
           Locitems.clear();
           Locitems.add('Select');
@@ -637,6 +637,7 @@ class _ChangeLocationState extends State<ChangeLocation> {
             Locitems.add(bacodeRes[index].locationFrom!);
             bacodeList.add(bacodeRes[index]);
           }
+          setState(() {});
           // Locitems.sort((a, b) => a.compareTo(b));
           EasyLoading.dismiss();
         } else {
